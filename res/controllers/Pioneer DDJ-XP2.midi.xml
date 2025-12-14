@@ -176,6 +176,23 @@
       <value label="128">7</value>
       <description>This specifies the smallest jump size, the larger jumpsizes are automatically available on the other pads.</description>
     </option>
+        <option
+      variable="numberOfHotCues"
+      type="enum"
+      label="Number of Hot Cue pads:">
+      <value label="8" default="true">8</value>
+      <value label="12">12</value>
+      <value label="16">16</value>
+      <description>How man pads you are going to use to control Hot Cues.</description>
+    </option>
+    <option variable="addPlayToHotCue"
+      type="boolean"
+      label="Add a row with Play and Cue buttons to the Hot Cue Pad selection. Only works if you choose to use less than 16 Hot Cue Pads."
+      default="false">
+      <description>
+         When active, there will be an Play, Cue and Track-Start / Track-End buttons added to the Hot Cue Pads.
+      </description>
+    </option>
     <option variable="useSlipOnSlicer"
       type="boolean"
       label="Use Slip Mode during Slicer and Slicer Roll"

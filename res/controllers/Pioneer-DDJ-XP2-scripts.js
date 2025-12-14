@@ -6,7 +6,12 @@
 // eslint-disable-next-line no-var
 var DDJXP2 = { };
 
+components.Component.prototype.shiftOffset = 1;
+components.Component.prototype.shiftChannel = true;
+components.Component.prototype.sendShifted = true;
 
+// helper to convert RGB into Pioneers color code. Not perfect, because there has been no
+// documentation at all. But works for me :)
 DDJXP2.RGBPioneerCode  = function(r, g, b, dim = 0) {
     const n = Math.min(Math.min(r, g), b);
     const v = Math.max(Math.max(r, g), b);
@@ -31,14 +36,12 @@ DDJXP2.RGBPioneerCode  = function(r, g, b, dim = 0) {
     }
 };
 
-components.Component.prototype.shiftOffset = 1;
-components.Component.prototype.shiftChannel = true;
-components.Component.prototype.sendShifted = true;
-
+// this implements a one-out-of-three selector button. The FX buttons are hardware controlled
+// this way, end it's required to follow these hardware with the implementation
 DDJXP2.ThreeButtonSelector = class extends components.Button {
     constructor(options) {
-        options.outTrigger = false;
         super(options);
+        this.outTrigger = false;
         this.selection = [0, 0, 0];
         this.offset = options.offset;
     };
@@ -58,6 +61,21 @@ DDJXP2.ThreeButtonSelector = class extends components.Button {
             }
         }
     };
+    activate(enable) {
+        if (enable || (!enable && this.outTrigger)) {
+            for (let i = 0; i < 3; i++) {
+                if (this.selection[i]) {
+                    this.send(this.outValueScale(enable), i);
+                    if (enable) {
+                        this.setExternalModifier(i + 1);
+                    }
+                }
+            }
+        } else {
+            this.setExternalModifier(0);
+        }
+        this.outTrigger = enable;
+    }
     send(value, position) {
         this.midi = this.midibase[position];
         super.send(value);
@@ -78,18 +96,22 @@ DDJXP2.ThreeButtonSelector = class extends components.Button {
                     }
                 } else {
                     // activating selected Option
-                    this.send(this.outValueScale(value), i);
+                    if (this.outTrigger) {
+                        this.send(this.outValueScale(value), i);
+                    }
                     this.selection[i] = value;
-                    if (typeof this.setExternalModifier === "function") {
+                    if (this.outTrigger && typeof this.setExternalModifier === "function") {
                         this.setExternalModifier(i + 1);
                     }
                 }
             } else {
                 if (this.groupArray[i] === group) {
                     // dectivating of button is pressed again
-                    this.send(this.outValueScale(value), i);
+                    if (this.outTrigger) {
+                        this.send(this.outValueScale(value), i);
+                    }
                     this.selection[i] = value;
-                    if (typeof this.setExternalModifier === "function") {
+                    if (this.outTrigger && typeof this.setExternalModifier === "function") {
                         this.setExternalModifier(0);
                     }
 
@@ -141,7 +163,10 @@ DDJXP2.init = function() {
         },
     });
 
-    // startup: reset Deck and PadMode selection
+    // startup: could not find any suitable SysEx to reset the controller
+    // it will be best if you disconnect and reconnect the controller before startung mixxx
+
+    // reset Deck and PadMode selection
     midi.sendShortMsg(0x92, 0x72, 0x00);
     midi.sendShortMsg(0x93, 0x72, 0x00);
 
@@ -160,9 +185,48 @@ DDJXP2.init = function() {
         DDJXP2.controls2deck.left.toggleDeck.input = DDJXP2.controls2deck.left.toggleDeck.inputReal;
         DDJXP2.controls2deck.right.toggleDeck.input = DDJXP2.controls2deck.right.toggleDeck.inputReal;
     }, true);
+    // reset Deck and PadMode selection done
+
+    this.shutdown = function() {
+        DDJXP2.controls2deck.shutdown();
+        DDJXP2.controls4deck.shutdown();
+    };
 
     engine.setValue("[Skin]", "show_4decks", true);
     engine.setValue("[Skin]", "show_4effectunits", true);
+
+    engine.setValue("[EffectRack1_EffectUnit1]", "group_[Channel1]_enable", 0);
+    engine.setValue("[EffectRack1_EffectUnit2]", "group_[Channel1]_enable", 0);
+    engine.setValue("[EffectRack1_EffectUnit3]", "group_[Channel1]_enable", 0);
+    engine.setValue("[EffectRack1_EffectUnit1]", "group_[Channel2]_enable", 0);
+    engine.setValue("[EffectRack1_EffectUnit2]", "group_[Channel2]_enable", 0);
+    engine.setValue("[EffectRack1_EffectUnit3]", "group_[Channel2]_enable", 0);
+    engine.setValue("[EffectRack1_EffectUnit1]", "group_[Channel3]_enable", 0);
+    engine.setValue("[EffectRack1_EffectUnit2]", "group_[Channel3]_enable", 0);
+    engine.setValue("[EffectRack1_EffectUnit3]", "group_[Channel3]_enable", 0);
+    engine.setValue("[EffectRack1_EffectUnit1]", "group_[Channel4]_enable", 0);
+    engine.setValue("[EffectRack1_EffectUnit2]", "group_[Channel4]_enable", 0);
+    engine.setValue("[EffectRack1_EffectUnit3]", "group_[Channel4]_enable", 0);
+
+    this.controls4deck.one.controlFX.activate(1);
+    this.controls4deck.two.controlFX.activate(1);
+
+    try {
+        engine.setValue("[Skin]", "highlight_mixer_[Channel1]", 1);
+        engine.setValue("[Skin]", "highlight_deck_[Channel1]", 1);
+        engine.setValue("[Skin]", "highlight_waveform_[Channel1]", 1);
+        engine.setValue("[Skin]", "highlight_mixer_[Channel2]", 1);
+        engine.setValue("[Skin]", "highlight_deck_[Channel2]", 1);
+        engine.setValue("[Skin]", "highlight_waveform_[Channel2]", 1);
+        engine.setValue("[Skin]", "highlight_mixer_[Channel3]", 0);
+        engine.setValue("[Skin]", "highlight_deck_[Channel3]", 0);
+        engine.setValue("[Skin]", "highlight_waveform_[Channel3]", 0);
+        engine.setValue("[Skin]", "highlight_mixer_[Channel4]", 0);
+        engine.setValue("[Skin]", "highlight_deck_[Channel4]", 0);
+        engine.setValue("[Skin]", "highlight_waveform_[Channel4]", 0);
+    } catch {
+        // continue regardless of error
+    };
 };
 
 DDJXP2.PadMode = class extends components.ComponentContainer {
@@ -455,67 +519,74 @@ DDJXP2.PadRows = {
     },
 };
 
-/* PAD implementation
- *
- * PAD1:    8 Hotcues, Play line and 4 Samplers or 8 Samplers (Parameter scrolls through sampler, how to indicate that ???)
- * PAD2:    Loop's (Slip or not) and 4 Samplers
- * PAD3:    Jump's and 4 Samplers
- * PAD4:    Effect's and 4 Samplers
- *
- * PAD5:    Slicer and 4 Samplers
- * PAD6:    SlicerRoll and 4 Samplers
- * PAD7:    Pitch change and 4 Samplers
- * PAD8:    Key change and 4 Samplers
- *
- */
-
-/* recordbox PADs (also Labeling for XP1)
- *
- * PAD1:    Hot Cue
- * PAD2:    PAD FX1
- * PAD3:    Beat Jump
- * PAD4:    Sampler
- *
- * PAD5:    Keyboard
- * PAD6:    PAD FX2
- * PAD7:    Beat Loop
- * PAD8:    Beat Shift
- *
- */
+// PAD implementation
 DDJXP2.PadModeContainers = {
     hotCue: class extends DDJXP2.PadMode {
-        // 1-8: HotCue
-        // 9-16: Sampler
         constructor(padNr, deckOffset, group, _modeBtnColor, _modeBtnAttnColor) {
             super();
-
-            super.constructPads(i => {
-                if (i < 4) {
-                    return DDJXP2.PadRows.play(deckOffset, group, i, padNr * 0x10);
-                } else if (i < 12) {
-                    return new components.HotcueButton({
+            const theContainer = this;
+            this.HotcueButtonPreset = class extends components.HotcueButton {
+                constructor(number, i) {
+                    super({
                         midi: [0x97 + (deckOffset * 2), padNr * 0x10 + midiAssignment[i]],
-                        number: i - 3,
+                        number,
                         group,
+                        outConnect: false,
                         color: DDJXP2.RGBPioneerCode(255, 128, 0),
                         connect: function() {
                             if (this.connections[0] === undefined) {
-                                components.Component.prototype.connect.call(this, arguments);
+                                components.Component.prototype.connect.call(this);
+                            } else {
+                                // just keep this for now as some possible regression warning...
+                                console.warn(`prevented reconnection of HotcueButton ${  this.group  } ${  this.number}`);
                             }
                         },
                         outValueScale: function(value) {
                             return (value)?this.color:0x00;
                         },
                     });
+                }
+            };
+            super.constructPads(i => {
+                if (parseInt(engine.getSetting("numberOfHotCues")) === 8) {
+                    if (engine.getSetting("addPlayToHotCue")) {
+                        if (i < 4) {
+                            return DDJXP2.PadRows.play(deckOffset, group, i, padNr * 0x10);
+                        } else if (i < 12) {
+                            return new theContainer.HotcueButtonPreset(i - 3, i);
+                        } else {
+                            return DDJXP2.PadRows.sampler(deckOffset, group, i, padNr * 0x10);
+                        }
+                    } else {
+                        if (i < 8) {
+                            return new theContainer.HotcueButtonPreset(i + 1, i);
+                        } if (i < 12) {
+                            return DDJXP2.PadRows.jump(deckOffset, group, i, padNr * 0x10);
+                        } else {
+                            return DDJXP2.PadRows.sampler(deckOffset, group, i, padNr * 0x10);
+                        }
+                    }
+                } else if (parseInt(engine.getSetting("numberOfHotCues")) === 12) {
+                    if (engine.getSetting("addPlayToHotCue")) {
+                        if (i < 4) {
+                            return DDJXP2.PadRows.play(deckOffset, group, i, padNr * 0x10);
+                        } else {
+                            return new theContainer.HotcueButtonPreset(i - 3, i);
+                        }
+                    } else {
+                        if (i < 12) {
+                            return new theContainer.HotcueButtonPreset(i + 1, i);
+                        } else {
+                            return DDJXP2.PadRows.sampler(deckOffset, group, i, padNr * 0x10);
+                        }
+                    }
                 } else {
-                    return DDJXP2.PadRows.sampler(deckOffset, group, i, padNr * 0x10);
+                    return new theContainer.HotcueButtonPreset(i + 1, i);
                 }
             });
         }
     },
     beatLoop: class extends DDJXP2.PadMode {
-        // 1-12: Auto-Loop
-        // 13: BeatJump left, 14: 1/2x BeatJump Size, 15: 2x BeatJump Size, 16: BeatJump right
         constructor(padNr, deckOffset, group, modeBtnColor, modeBtnAttnColor) {
             super();
             const theContainer = this;
@@ -568,8 +639,6 @@ DDJXP2.PadModeContainers = {
         }
     },
     slicer: class extends DDJXP2.PadModeSlicer {
-        // 1-8: Slicer
-        // 9-16: Sampler
         constructor(padNr, deckOffset, group, modeBtnColor, modeBtnAttnColor) {
             super(group);
             this.type = "SlicerLoop";
@@ -596,8 +665,6 @@ DDJXP2.PadModeContainers = {
         }
     },
     beatJump: class extends DDJXP2.PadMode {
-        // 1-12: Jump
-        // 13: BeatJump left, 14: 1/2x BeatJump Size, 15: 2x BeatJump Size, 16: BeatJump right
         constructor(padNr, deckOffset, group, _modeBtnColor, _modeBtnAttnColor) {
             super();
             const theContainer = this;
@@ -790,13 +857,81 @@ DDJXP2.PadModeContainers = {
     sampler: class extends DDJXP2.PadMode {
         constructor(padNr, deckOffset, _group, _modeBtnColor, _modeBtnAttnColor) {
             super();
+            this.baseOffset = 0;
+            this.onPosition = DDJXP2.RGBPioneerCode(120, 255, 0);
+            this.offPosition = DDJXP2.RGBPioneerCode(120, 255, 0, true);
+            this.on = DDJXP2.RGBPioneerCode(0, 255, 0);
+            this.off = DDJXP2.RGBPioneerCode(0, 255, 0, true);
+            const padContainer = this;
+
+            this.parameterLeft = {
+                input(_channel, _control, value, _status, _group) {
+                    if (value) {
+                        padContainer.baseOffset = (padContainer.baseOffset)?(padContainer.baseOffset - 1):3;
+                        padContainer.updateAllPads();
+                    }
+                }
+            };
+            this.parameterRight = {
+                input(_channel, _control, value, _status, _group) {
+                    if (value) {
+                        padContainer.baseOffset = (padContainer.baseOffset + 1) % 4;
+                        padContainer.updateAllPads();
+                    }
+                }
+            };
             super.constructPads(i => new components.SamplerButton({
                 midi: [0x97 + (deckOffset * 2), padNr * 0x10 + midiAssignment[i]],
+                baseNumber: i + 1,
                 number: i + 1,
-                on: DDJXP2.RGBPioneerCode(0, 255, 0, true),
-                off: 0x3F,
+                on: padContainer.on,
+                off: padContainer.off,
             })
             );
+        }
+        updateAllPads() {
+            this.reconnectComponents(function(component) {
+                component.number = component.baseNumber + this.baseOffset * 16;
+                component.group = `[Sampler${  component.number  }]`;
+                switch (this.baseOffset) {
+                case 1:
+                    switch (component.baseNumber) {
+                    case 1:
+                    case 2:
+                    case 3:
+                    case 5:
+                    case 6:
+                    case 9:
+                        component.on = this.onPosition;
+                        component.off = this.offPosition;
+                        break;
+                    default:
+                        component.on = this.on;
+                        component.off = this.off;
+                    }
+                    break;
+                case 2:
+                    switch (component.baseNumber) {
+                    case 12:
+                    case 15:
+                    case 16:
+                        component.on = this.on;
+                        component.off = this.off;
+                        break;
+                    default:
+                        component.on = this.onPosition;
+                        component.off = this.offPosition;
+                    }
+                    break;
+                case 3:
+                    component.on = this.onPosition;
+                    component.off = this.offPosition;
+                    break;
+                default:
+                    component.on = this.on;
+                    component.off = this.off;
+                }
+            });
         }
     },
     quickEffect: class extends DDJXP2.PadMode {
@@ -827,7 +962,7 @@ DDJXP2.PadModeContainers = {
             );
         }
         init(status, control, value) {
-            Object.values(DDJXP2.controls2deck)[(this.deckOffset) % 2].fader.useForEffectPads(value, this.group);
+            Object.values(DDJXP2.controls2deck)[(script.deckFromGroup(this.group) - 1) % 2].fader.useForEffects(value, `[QuickEffectRack1_${this.group}]`, "super1");
         }
     },
     equalizerRack: class extends DDJXP2.PadMode {
@@ -865,8 +1000,6 @@ DDJXP2.PadModeContainers = {
     },
 };
 
-
-
 DDJXP2.DeckControls4Deck = class extends components.Deck {
     constructor(deckNumbers, midiChannel) {
         super(deckNumbers);
@@ -875,7 +1008,6 @@ DDJXP2.DeckControls4Deck = class extends components.Deck {
 
         this.beatLoop4 = new components.Button({
             midi: [0x90 + midiChannel, 0x14],
-            sendShifted: true,
             shiftChannel: false,
             shiftControl: true,
             shiftOffset: 60,
@@ -904,7 +1036,6 @@ DDJXP2.DeckControls4Deck = class extends components.Deck {
 
         this.quantize = new components.Button({
             midi: [0x90 + midiChannel, 0x35],
-            sendShifted: true,
             shiftChannel: false,
             shiftControl: true,
             shiftOffset: 4,
@@ -913,24 +1044,21 @@ DDJXP2.DeckControls4Deck = class extends components.Deck {
         });
 
         this.slipReverse = new components.Button({
-            midi: [0x90 + midiChannel, 0x15],
             key: "reverseroll",
-            input: function(_channel, control, value, status, _g) {
+            input: function(channel, control, value, status, group) {
                 const target = theDeck.padMode.getPadModeInstance();
                 if (target && target.slip && typeof target.slip === "function") {
                     target.slip(status, control, value);
                 } else {
-                    components.Button.prototype.input.call(this, arguments);
+                    components.Button.prototype.input.call(this, channel, control, value, status, group);
                 };
             }
-            // shiftChannel: false,
-            // shiftControl: true,
-            // shiftOffset: 0x3C,
         });
 
         this.masterTempo = new components.Button({
             midi: [0x90 + midiChannel, 0x1A],
             sendShifted: true,
+            shiftChannel: false,
             shiftControl: true,
             shiftOffset: 70,
             type: components.Button.prototype.types.toggle,
@@ -939,7 +1067,7 @@ DDJXP2.DeckControls4Deck = class extends components.Deck {
 
         this.beatSync = new components.Button({
             midi: [0x90 + midiChannel, 0x58],
-            sendShifted: true,
+            shiftChannel: false,
             shiftControl: true,
             shiftOffset: 4,
             type: components.Button.prototype.types.toggle,
@@ -954,7 +1082,7 @@ DDJXP2.DeckControls4Deck = class extends components.Deck {
 
         this.silentCue = new components.Button({
             midi: [0x90 + midiChannel, 0x68],
-            sendShifted: true,
+            shiftChannel: false,
             shiftControl: true,
             shiftOffset: 16,
             type: components.Button.prototype.types.toggle,
@@ -1087,28 +1215,42 @@ DDJXP2.DeckControls4Deck = class extends components.Deck {
             },
         });
 
+        this.controlFX = new DDJXP2.ThreeButtonSelector({
+            midibase: [[0x94 + (midiChannel % 2), 0x70], [0x94 + (midiChannel % 2), 0x71], [0x94 + (midiChannel % 2), 0x72]],
+            sendShifted: true,
+            shiftChannel: false,
+            shiftControl: true,
+            shiftOffset: 3,
+            offset: 0x70,
+            key: `group_[Channel${midiChannel + 1}]_enable`,
+            groupArray: ["[EffectRack1_EffectUnit1]", "[EffectRack1_EffectUnit2]", "[EffectRack1_EffectUnit3]"],
+            setExternalModifier: function(position) {
+                Object.values(DDJXP2.controls2deck)[(script.deckFromGroup(this.group) - 1) % 2].fader.useForEffects(position, this.groupArray[position - 1], "super1");
+            }
+        });
+
         const modeBtnColor1 = DDJXP2.RGBPioneerCode(80, 0, 255);
         const modeBtnAttnColor1 = DDJXP2.RGBPioneerCode(255, 0, 80);
         const modeBtnColor2 = DDJXP2.RGBPioneerCode(255, 255, 0);
         const modeBtnAttnColor2 = DDJXP2.RGBPioneerCode(255, 40, 0);
 
-        this.pads = new components.ComponentContainer({
-            one: new DDJXP2.PadModeContainers[engine.getSetting("pad1")](0, midiChannel, this.currentDeck, modeBtnColor1, modeBtnAttnColor1),
-            two: new DDJXP2.PadModeContainers[engine.getSetting("pad2")](1, midiChannel, this.currentDeck, modeBtnColor1, modeBtnAttnColor1),
-            three: new DDJXP2.PadModeContainers[engine.getSetting("pad3")](2, midiChannel, this.currentDeck, modeBtnColor1, modeBtnAttnColor1),
-            four: new DDJXP2.PadModeContainers[engine.getSetting("pad4")](3, midiChannel, this.currentDeck, modeBtnColor1, modeBtnAttnColor1),
-            five: new DDJXP2.PadModeContainers[engine.getSetting("pad5")](4, midiChannel, this.currentDeck, modeBtnColor2, modeBtnAttnColor2),
-            six: new DDJXP2.PadModeContainers[engine.getSetting("pad6")](5, midiChannel, this.currentDeck, modeBtnColor2, modeBtnAttnColor2),
-            seven: new DDJXP2.PadModeContainers[engine.getSetting("pad7")](6, midiChannel, this.currentDeck, modeBtnColor2, modeBtnAttnColor2),
-            eight: new DDJXP2.PadModeContainers[engine.getSetting("pad8")](7, midiChannel, this.currentDeck, modeBtnColor2, modeBtnAttnColor2),
-        });
+        // don't create this ComponentContainer with an object as argument,
+        // this will create additional connections with this.applyLayer(initialLayer);
+        this.pads = new components.ComponentContainer();
+        this.pads.one = new DDJXP2.PadModeContainers[engine.getSetting("pad1")](0, midiChannel, this.currentDeck, modeBtnColor1, modeBtnAttnColor1);
+        this.pads.two = new DDJXP2.PadModeContainers[engine.getSetting("pad2")](1, midiChannel, this.currentDeck, modeBtnColor1, modeBtnAttnColor1);
+        this.pads.three = new DDJXP2.PadModeContainers[engine.getSetting("pad3")](2, midiChannel, this.currentDeck, modeBtnColor1, modeBtnAttnColor1);
+        this.pads.four = new DDJXP2.PadModeContainers[engine.getSetting("pad4")](3, midiChannel, this.currentDeck, modeBtnColor1, modeBtnAttnColor1);
+        this.pads.five = new DDJXP2.PadModeContainers[engine.getSetting("pad5")](4, midiChannel, this.currentDeck, modeBtnColor2, modeBtnAttnColor2);
+        this.pads.six = new DDJXP2.PadModeContainers[engine.getSetting("pad6")](5, midiChannel, this.currentDeck, modeBtnColor2, modeBtnAttnColor2);
+        this.pads.seven = new DDJXP2.PadModeContainers[engine.getSetting("pad7")](6, midiChannel, this.currentDeck, modeBtnColor2, modeBtnAttnColor2);
+        this.pads.eight = new DDJXP2.PadModeContainers[engine.getSetting("pad8")](7, midiChannel, this.currentDeck, modeBtnColor2, modeBtnAttnColor2);
 
         this.forEachComponent(function(component) {
             if (component.group === undefined) {
                 component.group = this.currentDeck;
             };
         });
-
     }
 };
 
@@ -1120,52 +1262,34 @@ DDJXP2.DeckControls2Deck = class extends components.Deck {
 
         this.fader = new components.Pot({
             inKey: "volume",
+            softTakeover: false,
             resetFader: function(_channel, control, value, status, group) {
                 // midi is only triggered if FX-Button is selected
                 this.inputMSB(_channel, control, 0x00, status, group);
                 this.inputLSB(_channel, control, 0x00, status, group);
             },
-            useForEffectPads: function(enable, group) {
+            useForEffects: function(enable, group, key) {
                 if (enable) {
-                    this.group = `[QuickEffectRack1_${group}]`;
-                    this.inKey = "super1";
-                } else {
                     this.group = group;
+                    this.inKey = key;
+                } else {
+                    this.group = theDeck.currentDeck;
                     this.inKey = "volume";
                 }
+                // this.disconnect();
+                // this.connect();
             }
         });
 
-        this.controlFX = new DDJXP2.ThreeButtonSelector({
-            midibase: [[0x94 + midiChannel, 0x70], [0x94 + midiChannel, 0x71], [0x94 + midiChannel, 0x72]],
-            sendShifted: true,
-            shiftControl: true,
-            shiftOffset: 3,
-            offset: 0x70,
-            key: `group_[Channel${midiChannel + 1}]_enable`,
-            groupArray: ["[EffectRack1_EffectUnit1]", "[EffectRack1_EffectUnit2]", "[EffectRack1_EffectUnit3]"],
-            setCurrentDeck: function(newGroup) {
-                this.inKey = `group_${newGroup}_enable`;
-                this.outKey = `group_${newGroup}_enable`;
-                this.disconnect();
-                this.connect();
+        this.controlFX = new components.Button({
+            input: function(channel, control, value, status, group) {
+                group = this.group;
+                DDJXP2.controls4deck.forEachComponentContainer(function(componentContainer) {
+                    if (componentContainer.controlFX && (componentContainer.controlFX.group === group)) {
+                        componentContainer.controlFX.input(channel, control, value, status, group);
+                    };
+                });
             },
-            setExternalModifier: function(position) {
-                if (position) {
-                    if (!theDeck.fader.baseGroup) {
-                        theDeck.fader.baseGroup = theDeck.fader.group;
-                        theDeck.fader.baseKey = theDeck.fader.inKey;
-                    }
-                    theDeck.fader.group = this.groupArray[position - 1];
-                    theDeck.fader.inKey = "super1";
-                } else {
-                    if (theDeck.fader.baseGroup) {
-                        theDeck.fader.group = theDeck.fader.baseGroup;
-                        theDeck.fader.baseGroup = null;
-                        theDeck.fader.inKey = theDeck.fader.baseKey;
-                    }
-                }
-            }
         });
 
         this.toggleDeck = new components.Button({
@@ -1202,11 +1326,41 @@ DDJXP2.DeckControls2Deck = class extends components.Deck {
         });
     }
 
+    toggle() {
+        let currentDeck = this.currentDeck;
+        DDJXP2.controls4deck.forEachComponentContainer(function(componentContainer) {
+            if (componentContainer.controlFX && componentContainer.controlFX.group === currentDeck) {
+                componentContainer.controlFX.activate(0);
+            };
+        });
+
+        try {
+            engine.setValue("[Skin]", `highlight_deck_${this.currentDeck}`, 0);
+            engine.setValue("[Skin]", `highlight_waveform_${this.currentDeck}`, 0);
+            engine.setValue("[Skin]", `highlight_mixer_${this.currentDeck}`, 0);
+        } catch {
+            // continue regardless of error
+        };
+        super.toggle();
+        try {
+            engine.setValue("[Skin]", `highlight_deck_${this.currentDeck}`, 1);
+            engine.setValue("[Skin]", `highlight_waveform_${this.currentDeck}`, 1);
+            engine.setValue("[Skin]", `highlight_mixer_${this.currentDeck}`, 1);
+        } catch {
+            // continue regardless of error
+        };
+
+        currentDeck = this.currentDeck;
+        DDJXP2.controls4deck.forEachComponentContainer(function(componentContainer) {
+            if (componentContainer.controlFX && componentContainer.controlFX.group === currentDeck) {
+                componentContainer.controlFX.activate(1);
+            }
+        });
+    }
     setCurrentDeck(newGroup) {
         if (this.fader.baseGroup) {
             this.fader.group = this.fader.baseGroup;
         }
-        this.controlFX.setCurrentDeck(newGroup);
         super.setCurrentDeck(newGroup);
     }
 };
