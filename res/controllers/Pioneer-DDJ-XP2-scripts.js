@@ -224,8 +224,8 @@ DDJXP2.init = function() {
         engine.setValue("[Skin]", "highlight_mixer_[Channel4]", 0);
         engine.setValue("[Skin]", "highlight_deck_[Channel4]", 0);
         engine.setValue("[Skin]", "highlight_waveform_[Channel4]", 0);
-    } catch {
-        // continue regardless of error
+    } finally {
+        // continue anyway
     };
 };
 
@@ -1338,16 +1338,16 @@ DDJXP2.DeckControls2Deck = class extends components.Deck {
             engine.setValue("[Skin]", `highlight_deck_${this.currentDeck}`, 0);
             engine.setValue("[Skin]", `highlight_waveform_${this.currentDeck}`, 0);
             engine.setValue("[Skin]", `highlight_mixer_${this.currentDeck}`, 0);
-        } catch {
-            // continue regardless of error
+        } finally {
+            // continue anyway
         };
         super.toggle();
         try {
             engine.setValue("[Skin]", `highlight_deck_${this.currentDeck}`, 1);
             engine.setValue("[Skin]", `highlight_waveform_${this.currentDeck}`, 1);
             engine.setValue("[Skin]", `highlight_mixer_${this.currentDeck}`, 1);
-        } catch {
-            // continue regardless of error
+        } finally {
+            // continue anyway
         };
 
         currentDeck = this.currentDeck;
