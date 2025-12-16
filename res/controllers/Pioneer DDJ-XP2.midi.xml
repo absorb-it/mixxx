@@ -193,6 +193,22 @@
          When active, there will be an Play, Cue and Track-Start / Track-End buttons added to the Hot Cue Pads.
       </description>
     </option>
+    <option variable="useFaderForDeckVolume"
+      type="boolean"
+      label="Use Fader for Deck Volume if no FX-Button is active."
+      default="false">
+      <description>
+         When selected, the Faders can be used to control the Volume of the active Deck as long as no FX-Button is active. If disabled, there will be no action at all if no FX-Button is active.
+      </description>
+    </option>
+    <option variable="useFaderForQuickEffects"
+      type="boolean"
+      label="Use Fader for Quick Effect Super Metaknob if Effect on Pad is active and no FX-Button is active,"
+      default="false">
+      <description>
+         When selected, the Faders can be used to control the Super Metaknob of the active Deck for the Pad- selected Quickeffect as long as no FX-Button is active. If disabled, there will be no action at all if no FX-Button is active.
+      </description>
+    </option>
     <option variable="useSlipOnSlicer"
       type="boolean"
       label="Use Slip Mode during Slicer and Slicer Roll"
