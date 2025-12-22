@@ -274,7 +274,7 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
         this.useSlip = engine.getSetting("useSlipOnSlicer");
         this.pressed = [false, false, false, false, false, false, false, false];
         this.startPos = -1;
-        this.activePadMode = false;
+        this.isActivePadMode = false;
         this.samplesBetweenSlices = undefined;
         const SlicerContainer = this;
         // move slicer window one samplesBetweenSlices-Size left
@@ -299,7 +299,6 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
         };
         // always update the slicer if a new track is loaded
         this.loadConnection = engine.makeConnection(this.group, "track_loaded", this.trackLoaded.bind(this));
-        this.activate(0);
     }
     // If at least one button is pressed, create a loop between those points,
     // else show some area indications (SlicereLoop) or create overall loop (SlicerLoopRoll)
@@ -365,17 +364,12 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
         for (let i = 0; i < 8; i++) {
             beat = (currentPos >= this.pads[i].endSample) ? (beat + 1) : beat;
         }
-
-        // If the beat count has changed, update the object property's value
-        if (this.beat !== beat) {
-            this.beat = beat;
-        };
+        this.beat = beat;
 
         // If in slicer mode (not slicer loop mode), check to see if the slicer section needs to be moved
         if (beat > 7) {
             this.startPos = this.pads[7].endSample;
-            this.activate(0);
-            this.activate(1);
+            this.activate(1, 0);
         }
     }
     // external toggle for slip mode
@@ -389,12 +383,12 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
     init(status, control, value) {
         switch (value) {
         case 0:
-            this.activePadMode = false;
+            this.isActivePadMode = false;
             this.activate(0);
             break;
         case 1:
         case 2:
-            this.activePadMode = true;
+            this.isActivePadMode = true;
             this.activate(1, 1);
             this.midi = [status, control];
             midi.sendShortMsg(this.midi[0], this.midi[1], (this.useSlip !== engine.getSetting("useSlipOnSlicer"))?this.slipOn:this.slipOff);
@@ -415,8 +409,8 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
             this.bpmConnection.disconnect();
             this.bpmConnection = undefined;
         }
-        if (engine.getValue(this.group, "track_loaded") && this.activePadMode) {
         // no wait for the upcoming bpm detection, can't do anything without this info
+        if (engine.getValue(this.group, "track_loaded") && this.isActivePadMode) {
             this.bpmConnection = engine.makeConnection(this.group, "local_bpm", this.trackLoadedAndBPMDetected.bind(this));
         }
     }
@@ -1296,7 +1290,7 @@ DDJXP2.DeckControls4Deck = class extends components.Deck {
             seven: new DDJXP2.PadModeContainers[engine.getSetting("pad7")](6, midiChannel, this.currentDeck, modeBtnColor2, modeBtnAttnColor2),
             eight: new DDJXP2.PadModeContainers[engine.getSetting("pad8")](7, midiChannel, this.currentDeck, modeBtnColor2, modeBtnAttnColor2),
         });
-        this.pads.one.activePadMode = true;
+        this.pads.one.isActivePadMode = true;
 
         this.forEachComponent(function(component) {
             if (component.group === undefined) {
