@@ -485,7 +485,7 @@ DDJXP2.SlicerButton = class extends components.Button {
     }
 };
 
-const midiAssignment = [0xC, 0xD, 0xE, 0xF, 0x8, 0x9, 0xA, 0xB, 0x4, 0x5, 0x6, 0x7, 0x0, 0x1, 0x2, 0x3];
+DDJXP2.padMidiAssignment = [0xC, 0xD, 0xE, 0xF, 0x8, 0x9, 0xA, 0xB, 0x4, 0x5, 0x6, 0x7, 0x0, 0x1, 0x2, 0x3];
 
 // some Pad-Rows which can be reused in different PadModes
 DDJXP2.PadRows = {
@@ -493,7 +493,7 @@ DDJXP2.PadRows = {
     sampler: function(deckOffset, _group, i, midiOffset) {
         const row = Math.floor(i / 4);
         return new components.SamplerButton({
-            midi: [0x97 + (deckOffset * 2), midiOffset + midiAssignment[i]],
+            midi: [0x97 + (deckOffset * 2), midiOffset + DDJXP2.padMidiAssignment[i]],
             number: (deckOffset % 2) * 4 + i - (row * 4) +1,
             on: DDJXP2.RGBPioneerCode(0, 255, 0, true),
             off: 0x3F,
@@ -504,7 +504,7 @@ DDJXP2.PadRows = {
         const pos = i % 4;
         if (pos === 0) {
             return new components.Button({
-                midi: [0x97 + (deckOffset * 2), midiOffset + midiAssignment[i]],
+                midi: [0x97 + (deckOffset * 2), midiOffset + DDJXP2.padMidiAssignment[i]],
                 group,
                 key: "beatjump_backward",
                 on: DDJXP2.RGBPioneerCode(255, 0, 255),
@@ -512,7 +512,7 @@ DDJXP2.PadRows = {
             });
         } else if (pos === 1) {
             return new components.Button({
-                midi: [0x97 + (deckOffset * 2), midiOffset + midiAssignment[i]],
+                midi: [0x97 + (deckOffset * 2), midiOffset + DDJXP2.padMidiAssignment[i]],
                 group,
                 key: "beatjump_size_halve",
                 on: DDJXP2.RGBPioneerCode(100, 0, 255),
@@ -520,7 +520,7 @@ DDJXP2.PadRows = {
             });
         } else if (pos === 2) {
             return new components.Button({
-                midi: [0x97 + (deckOffset * 2), midiOffset + midiAssignment[i]],
+                midi: [0x97 + (deckOffset * 2), midiOffset + DDJXP2.padMidiAssignment[i]],
                 group,
                 key: "beatjump_size_double",
                 on: DDJXP2.RGBPioneerCode(100, 0, 255),
@@ -528,7 +528,7 @@ DDJXP2.PadRows = {
             });
         } else {
             return new components.Button({
-                midi: [0x97 + (deckOffset * 2), midiOffset + midiAssignment[i]],
+                midi: [0x97 + (deckOffset * 2), midiOffset + DDJXP2.padMidiAssignment[i]],
                 group,
                 key: "beatjump_forward",
                 on: DDJXP2.RGBPioneerCode(255, 0, 255),
@@ -541,19 +541,19 @@ DDJXP2.PadRows = {
         const pos = i % 4;
         if (pos === 0) {
             return new components.PlayButton({
-                midi: [0x97 + (deckOffset * 2), midiOffset + midiAssignment[i]],
+                midi: [0x97 + (deckOffset * 2), midiOffset + DDJXP2.padMidiAssignment[i]],
                 group,
                 on: DDJXP2.RGBPioneerCode(255, 30, 0),
             });
         } else if (pos === 1) {
             return new components.CueButton({
-                midi: [0x97 + (deckOffset * 2), midiOffset + midiAssignment[i]],
+                midi: [0x97 + (deckOffset * 2), midiOffset + DDJXP2.padMidiAssignment[i]],
                 group,
                 on: DDJXP2.RGBPioneerCode(255, 30, 0),
             });
         } else if (pos === 2) {
             return new components.Button({
-                midi: [0x97 + (deckOffset * 2), midiOffset + midiAssignment[i]],
+                midi: [0x97 + (deckOffset * 2), midiOffset + DDJXP2.padMidiAssignment[i]],
                 group,
                 key: "start",
                 on: DDJXP2.RGBPioneerCode(0, 0, 255),
@@ -561,9 +561,9 @@ DDJXP2.PadRows = {
             });
         } else {
             return new components.Button({
-                midi: [0x97 + (deckOffset * 2), midiOffset + midiAssignment[i]],
+                midi: [0x97 + (deckOffset * 2), midiOffset + DDJXP2.padMidiAssignment[i]],
                 group,
-                key: "end",
+                key: "eject",
                 on: DDJXP2.RGBPioneerCode(0, 0, 255),
                 off: DDJXP2.RGBPioneerCode(0, 0, 255, true),
             });
@@ -580,7 +580,7 @@ DDJXP2.PadModeContainers = {
             this.HotcueButtonPreset = class extends components.HotcueButton {
                 constructor(number, i) {
                     super({
-                        midi: [0x97 + (deckOffset * 2), padNr * 0x10 + midiAssignment[i]],
+                        midi: [0x97 + (deckOffset * 2), padNr * 0x10 + DDJXP2.padMidiAssignment[i]],
                         number,
                         group,
                         on: DDJXP2.RGBPioneerCode(255, 128, 0),
@@ -652,7 +652,7 @@ DDJXP2.PadModeContainers = {
                 if (i < 12) {
                     const loopSize = Math.pow(2, theContainer.currentBaseLoopSize + i);
                     return new components.Button({
-                        midi: [0x97 + (deckOffset * 2), padNr * 0x10 + midiAssignment[i]],
+                        midi: [0x97 + (deckOffset * 2), padNr * 0x10 + DDJXP2.padMidiAssignment[i]],
                         group,
                         inKey: `beatloop_${loopSize}_toggle`,
                         outKey: `beatloop_${loopSize}_enabled`,
@@ -707,7 +707,7 @@ DDJXP2.PadModeContainers = {
                 if (i < 8) {
                     // Slicer copied and adapted from Hercules-DJControl-Inpulse-300-script.js
                     return new DDJXP2.SlicerButton({
-                        midi: [0x97 + (deckOffset * 2), padNr * 0x10 + midiAssignment[i]],
+                        midi: [0x97 + (deckOffset * 2), padNr * 0x10 + DDJXP2.padMidiAssignment[i]],
                         number: i,
                         group: group,
                         on: DDJXP2.RGBPioneerCode(0, 255, 255),
@@ -739,7 +739,7 @@ DDJXP2.PadModeContainers = {
                 if (i < 12) {
                     const loopSize = Math.pow(2, theContainer.currentBaseJumpSize + i);
                     return new components.Button({
-                        midi: [0x97 + (deckOffset * 2), padNr * 0x10 + midiAssignment[i]],
+                        midi: [0x97 + (deckOffset * 2), padNr * 0x10 + DDJXP2.padMidiAssignment[i]],
                         group,
                         on: DDJXP2.RGBPioneerCode(128, 0, 160),
                         off: DDJXP2.RGBPioneerCode(128, 0, 160, true),
@@ -761,7 +761,7 @@ DDJXP2.PadModeContainers = {
                     // offset from -6 to +6
                     const offset = (((2 - Math.floor(i / 4)) * 4 + (i % 4)) - 5.5) * 12 / 11;
                     return new components.Button({
-                        midi: [0x97 + (deckOffset * 2), padNr * 0x10 + midiAssignment[i]],
+                        midi: [0x97 + (deckOffset * 2), padNr * 0x10 + DDJXP2.padMidiAssignment[i]],
                         number: i,
                         key: "pitch_adjust",
                         offset,
@@ -822,7 +822,7 @@ DDJXP2.PadModeContainers = {
                     const colorB = (offset < 0)?(255 - (offset + 6) * 8):(255 - (offset + 6) * 20);
 
                     return new components.Button({
-                        midi: [0x97 + (deckOffset * 2), padNr * 0x10 + midiAssignment[i]],
+                        midi: [0x97 + (deckOffset * 2), padNr * 0x10 + DDJXP2.padMidiAssignment[i]],
                         key: "pitch_adjust",
                         number: i,
                         offset,
@@ -899,7 +899,7 @@ DDJXP2.PadModeContainers = {
                 if (i < 8) {
                     // Slicer copied and adapted from Hercules-DJControl-Inpulse-300-script.js
                     return new DDJXP2.SlicerButton({
-                        midi: [0x97 + (deckOffset * 2), padNr * 0x10 + midiAssignment[i]],
+                        midi: [0x97 + (deckOffset * 2), padNr * 0x10 + DDJXP2.padMidiAssignment[i]],
                         number: i,
                         group: group,
                         on: DDJXP2.RGBPioneerCode(0, 255, 100),
@@ -940,7 +940,7 @@ DDJXP2.PadModeContainers = {
                 }
             };
             super.constructPads(i => new components.SamplerButton({
-                midi: [0x97 + (deckOffset * 2), padNr * 0x10 + midiAssignment[i]],
+                midi: [0x97 + (deckOffset * 2), padNr * 0x10 + DDJXP2.padMidiAssignment[i]],
                 baseNumber: i + 1,
                 number: i + 1,
                 on: padContainer.on,
@@ -999,7 +999,7 @@ DDJXP2.PadModeContainers = {
             this.deckOffset = deckOffset;
             this.group = group;
             super.constructPads(i => new components.Button({
-                midi: [0x97 + (deckOffset * 2), padNr * 0x10 + midiAssignment[i]],
+                midi: [0x97 + (deckOffset * 2), padNr * 0x10 + DDJXP2.padMidiAssignment[i]],
                 group: `[QuickEffectRack1_${group}]`,
                 key: "loaded_chain_preset",
                 number: i + 1,
@@ -1032,7 +1032,7 @@ DDJXP2.PadModeContainers = {
             super.constructPads((i) => {
                 if (i < 8) {
                     return new components.Button({
-                        midi: [0x97 + (deckOffset * 2), padNr * 0x10 + midiAssignment[i]],
+                        midi: [0x97 + (deckOffset * 2), padNr * 0x10 + DDJXP2.padMidiAssignment[i]],
                         group: `[EqualizerRack1_${group}]`,
                         key: "loaded_chain_preset",
                         number: i + 2,
