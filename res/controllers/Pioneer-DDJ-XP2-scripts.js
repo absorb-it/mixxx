@@ -277,6 +277,7 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
         this.activePadMode = false;
         this.samplesBetweenSlices = undefined;
         const SlicerContainer = this;
+        // move slicer window one samplesBetweenSlices-Size left
         this.parameterLeft = {
             input(_channel, _control, value, _status, _group) {
                 if (value) {
@@ -286,6 +287,7 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
                 }
             }
         };
+        // move slicer window one samplesBetweenSlices-Size right
         this.parameterRight = {
             input(_channel, _control, value, _status, _group) {
                 if (value) {
@@ -295,11 +297,13 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
                 }
             }
         };
+        // always update the slicer if a new track is loaded
         this.loadConnection = engine.makeConnection(this.group, "track_loaded", this.trackLoaded.bind(this));
         this.activate(0);
     }
+    // If at least one button is pressed, create a loop between those points,
+    // else show some area indications (SlicereLoop) or create overall loop (SlicerLoopRoll)
     updateLoop() {
-        // If at least one button is pressed, create a loop between those points
         const startPad = this.pressed.indexOf(true);
         const endPad = this.pressed.lastIndexOf(true);
 
@@ -337,6 +341,7 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
             }
         });
     }
+    // calculate samples per beat
     samplesPerBeat(group) {
         const sampleRate = engine.getValue(group, "track_samplerate");
         const bpm = engine.getValue(group, "local_bpm");
@@ -346,12 +351,12 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
         const samplesPerBeat = secondsPerBeat * sampleRate;
         return samplesPerBeat;
     }
-    // This connection will reinitialize Slicer when the beatloop size spinbox changes
+    // reinitialize Slicer when the beatloop size / slicer size changes
     slicerSizeChange(_value, _group, _control) {
         this.activate(1, 0);
         this.updateLoop();
     }
-    // This function will count beats and move the Slicer section forward when needed
+    // count beats and move the Slicer section forward when needed
     slicerCountBeat(_value, _group, _control) {
         // Calculate current position in samples
         const currentPos = engine.getValue(this.group, "track_samples") * engine.getValue(this.group, "playposition");
@@ -373,12 +378,14 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
             this.activate(1);
         }
     }
+    // external toggle for slip mode
     slip(status, control, value) {
         if (value) {
             this.useSlip = !this.useSlip;
             midi.sendShortMsg(this.midi[0], this.midi[1], (this.useSlip !== engine.getSetting("useSlipOnSlicer"))?this.slipOn:this.slipOff);
         }
     }
+    // external initialization, will be called on every pad selection button press
     init(status, control, value) {
         switch (value) {
         case 0:
@@ -394,6 +401,7 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
             break;
         }
     }
+    // callback for loaded track and followed beat detection, now slicer can be activated
     trackLoadedAndBPMDetected() {
         if (this.bpmConnection) {
             this.bpmConnection.disconnect();
@@ -401,15 +409,18 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
         }
         this.activate(1, 1);
     }
+    // callback for loaded track
     trackLoaded() {
         if (this.bpmConnection) {
             this.bpmConnection.disconnect();
             this.bpmConnection = undefined;
         }
         if (engine.getValue(this.group, "track_loaded") && this.activePadMode) {
+        // no wait for the upcoming bpm detection, can't do anything without this info
             this.bpmConnection = engine.makeConnection(this.group, "local_bpm", this.trackLoadedAndBPMDetected.bind(this));
         }
     }
+    // activate the slicer with option to renew the start position
     activate(enter = 0, renewStart = 1) {
         if (enter && engine.getValue(this.group, "track_loaded")) {
             if (renewStart) {
@@ -439,7 +450,7 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
             if (this.beatConnection !== undefined) {
                 this.beatConnection.disconnect();
                 this.sizeConnection.disconnect();
-                // Make loop position indicators disappear as visual feedback
+
                 engine.setValue(this.group, "loop_start_position", -1);
                 engine.setValue(this.group, "loop_end_position", -1);
                 if (this.useSlip) {
@@ -453,6 +464,7 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
     }
 };
 
+// special button for slicers
 DDJXP2.SlicerButton = class extends components.Button {
     constructor(options, padContainer) {
         super(options);
@@ -481,7 +493,9 @@ DDJXP2.SlicerButton = class extends components.Button {
 
 const midiAssignment = [0xC, 0xD, 0xE, 0xF, 0x8, 0x9, 0xA, 0xB, 0x4, 0x5, 0x6, 0x7, 0x0, 0x1, 0x2, 0x3];
 
+// some Pad-Rows which can be reused in different PadModes
 DDJXP2.PadRows = {
+    // first four samplers on the left side, fifth to eights sampler on the right side
     sampler: function(deckOffset, _group, i, midiOffset) {
         const row = Math.floor(i / 4);
         return new components.SamplerButton({
@@ -491,6 +505,7 @@ DDJXP2.PadRows = {
             off: 0x3F,
         });
     },
+    // jump through your track with the outer buttons, change the jump-distance with the inner ones
     jump: function(deckOffset, group, i, midiOffset) {
         const pos = i % 4;
         if (pos === 0) {
@@ -527,6 +542,7 @@ DDJXP2.PadRows = {
             });
         }
     },
+    // play and cue button followed by some jump to start and some track eject button
     play: function(deckOffset, group, i, midiOffset) {
         const pos = i % 4;
         if (pos === 0) {
