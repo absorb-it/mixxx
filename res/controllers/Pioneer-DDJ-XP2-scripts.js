@@ -1269,9 +1269,7 @@ DDJXP2.DeckControls4Deck = class extends components.Deck {
             key: `group_[Channel${midiChannel + 1}]_enable`,
             groupArray: ["[EffectRack1_EffectUnit1]", "[EffectRack1_EffectUnit2]", "[EffectRack1_EffectUnit3]"],
             setExternalModifier: function(position) {
-                if (engine.getSetting("useFaderForDeckVolume")) {
-                    Object.values(DDJXP2.controls2deck)[(script.deckFromGroup(this.group) - 1) % 2].fader.useForEffects(position, this.groupArray[position - 1], "super1");
-                }
+                Object.values(DDJXP2.controls2deck)[(script.deckFromGroup(this.group) - 1) % 2].fader.useForEffects(position, this.groupArray[position - 1], "super1");
             }
         });
 
@@ -1309,7 +1307,6 @@ DDJXP2.DeckControls2Deck = class extends components.Deck {
         const theDeck = this;
 
         this.fader = new components.Pot({
-            inKey: "volume",
             softTakeover: false,
             resetFader: function(_channel, control, value, status, group) {
                 this.inputMSB(_channel, control, 0x00, status, group);
@@ -1319,9 +1316,11 @@ DDJXP2.DeckControls2Deck = class extends components.Deck {
                 if (enable) {
                     this.group = group;
                     this.inKey = key;
-                } else {
+                } else if (engine.getSetting("useFaderForDeckVolume")) {
                     this.group = theDeck.currentDeck;
                     this.inKey = "volume";
+                } else {
+                    this.inKey = undefined;
                 }
             }
         });
