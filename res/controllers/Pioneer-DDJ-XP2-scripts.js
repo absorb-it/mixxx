@@ -1,6 +1,5 @@
 /*
-
-
+Pioneer DDJ-XP2 controller script
 */
 
 // eslint-disable-next-line no-var
@@ -25,7 +24,7 @@ components.Component.prototype.connect = function() {
 
 // helper to convert RGB into Pioneers color code. Not perfect, because there has been no
 // documentation at all. But works for me :)
-DDJXP2.RGBPioneerCode  = function(r, g, b, dim = 0) {
+DDJXP2.RGBPioneerCode = function(r, g, b, dim = 0) {
     const n = Math.min(Math.min(r, g), b);
     const v = Math.max(Math.max(r, g), b);
     const m = v - n;
@@ -760,6 +759,10 @@ DDJXP2.PadModeContainers = {
                 if (i < 12) {
                     // offset from -6 to +6
                     const offset = (((2 - Math.floor(i / 4)) * 4 + (i % 4)) - 5.5) * 12 / 11;
+                    // this strange calculation will give me the following pad value matrix
+                    //  2,73     3,82    4,91    6,00
+                    // -1,64    -0,55    0,55    1,64
+                    // -6,00    -4,91   -3,82   -2,73
                     return new components.Button({
                         midi: [0x97 + (deckOffset * 2), padNr * 0x10 + DDJXP2.padMidiAssignment[i]],
                         number: i,
@@ -818,6 +821,10 @@ DDJXP2.PadModeContainers = {
                     // offset from -6 to 6 without 0
                     let offset = (2 - Math.floor(i / 4)) * 4 + (i % 4);
                     offset += (offset < 6)?-6:-5;
+                    // this strange calculation will give me the following pad value matrix
+                    //  3    4    5    6
+                    // -2   -1    1    2
+                    // -6   -5   -4   -3
                     const colorR = (offset < 0)?(255 + (offset - 6) * 20):(255 + (offset - 6) * 8);
                     const colorB = (offset < 0)?(255 - (offset + 6) * 8):(255 - (offset + 6) * 20);
 
