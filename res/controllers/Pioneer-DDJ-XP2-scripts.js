@@ -1151,7 +1151,7 @@ DDJXP2.DeckControls4Deck = class extends components.Deck {
             midi: [0x90 + midiChannel, 0x0A],
             sendShifted: false,
             type: components.Button.prototype.types.push,
-            key: "pitch_down",
+            key: "pitch",
             unshift: function() {
                 this.type = components.Button.prototype.types.push;
                 this.inKey = "pitch_down";
@@ -1160,19 +1160,25 @@ DDJXP2.DeckControls4Deck = class extends components.Deck {
                 this.type = components.Button.prototype.types.toggle;
                 this.inKey = "sync_key";
             },
+            outValueScale: function(value) {
+                return (value < 0)?this.on:this.off;
+            }
         });
 
         this.keyPlus = new components.Button({
             midi: [0x90 + midiChannel, 0x79],
             sendShifted: false,
             type: components.Button.prototype.types.push,
-            key: "pitch_up",
+            key: "pitch",
             unshift: function() {
                 this.inKey = "pitch_up";
             },
             shift: function() {
                 this.inKey = "reset_key";
             },
+            outValueScale: function(value) {
+                return (value > 0)?this.on:this.off;
+            }
         });
 
         this.loadTrack = new components.Button({
