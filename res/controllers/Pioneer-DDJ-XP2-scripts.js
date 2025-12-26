@@ -1130,12 +1130,11 @@ DDJXP2.PadModeContainers = {
                 off: 0x7F,
                 input(_channel, _control, value, _status, _group) {
                     if (value) {
-                        if (engine.getValue(this.group, this.key) !== this.number) {
-                            engine.setValue(this.group, this.key, this.number);
-                        } else {
-                            engine.setValue(this.group, this.key, 1);
-                        }
+                        this.inSetValue(this.inValueScale(value));
                     }
+                },
+                inValueScale(_value) {
+                    return (this.inGetValue() !== this.number)?this.number:1;
                 },
                 outValueScale(value) {
                     return (value === this.number)?this.on:this.off;
@@ -1163,12 +1162,11 @@ DDJXP2.PadModeContainers = {
                         off: 0x7F,
                         input(_channel, _control, value, _status, _group) {
                             if (value) {
-                                if (engine.getValue(this.group, this.key) !== this.number) {
-                                    engine.setValue(this.group, this.key, this.number);
-                                } else {
-                                    engine.setValue(this.group, this.key, 1);
-                                }
+                                this.inSetValue(this.inValueScale(value));
                             }
+                        },
+                        inValueScale(_value) {
+                            return (this.inGetValue() !== this.number)?this.number:1;
                         },
                         outValueScale(value) {
                             return (value === this.number)?this.on:this.off;
