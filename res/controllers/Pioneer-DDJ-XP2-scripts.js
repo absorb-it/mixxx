@@ -943,26 +943,18 @@ DDJXP2.PadModeContainers = {
                                 engine.setValue(group, "reset_key", 0x7F);
                                 if (theContainer.active !== this.offset) {
                                     theContainer.active = this.offset;
-                                    let newOffset = this.offset;
-                                    if (newOffset < 0) {
-                                        while (newOffset++ < 0) {
-                                            engine.setValue(group, "pitch_down", 0x7F);
-                                        }
-                                    } else {
-                                        while (newOffset-- > 0) {
-                                            engine.setValue(group, "pitch_up", 0x7F);
-                                        }
-                                    }
+                                    this.inSetValue(this.offset);
                                 } else {
                                     theContainer.active = 0;
                                 }
                             }
                         },
                         updateLED() {
-                            this.output(theContainer.active === this.offset);
+                            this.output(theContainer.active);
                         },
                         outValueScale(value) {
-                            return (theContainer.active === this.offset)?this.on:this.off;
+                            // distance between pads is 1 - light closest neighbour
+                            return (value && Math.abs(value - this.offset) <= 0.1)?this.on:this.off;
                         },
                     });
                 } else {
@@ -973,20 +965,14 @@ DDJXP2.PadModeContainers = {
         pitchDown(status, control, value) {
             if (value && this.active !== -6) {
                 this.active -= 1;
-                if (!this.active) {
-                    this.active = -1;
-                }
-                engine.setValue(this.group, "pitch_down", 0x7F);
+                engine.setValue(this.group, "pitch_adjust", this.active);
                 this.updateLEDs();
             }
         }
         pitchUp(status, control, value) {
             if (value && this.active !== 6) {
                 this.active += 1;
-                if (!this.active) {
-                    this.active = +1;
-                }
-                engine.setValue(this.group, "pitch_up", 0x7F);
+                engine.setValue(this.group, "pitch_adjust", this.active);
                 this.updateLEDs();
             }
         }
@@ -1000,7 +986,7 @@ DDJXP2.PadModeContainers = {
         syncKey(status, control, value) {
             if (value) {
                 engine.setValue(this.group, "sync_key", 0x7F);
-                this.active = Math.floor(engine.getValue(this.group, "pitch") + 0.5);
+                this.active = engine.getValue(this.group, "pitch_adjust");
                 this.updateLEDs();
             }
         }
@@ -1010,6 +996,7 @@ DDJXP2.PadModeContainers = {
                 break;
             case 1:
             case 2:
+                this.active = engine.getValue(this.group, "pitch_adjust");
                 this.updateLEDs();
                 break;
             }
@@ -1303,7 +1290,7 @@ DDJXP2.DeckControls4Deck = class extends components.Deck {
                 }
             },
             outValueScale: function(value) {
-                return (value < 0)?this.on:this.off;
+                return (value < -0.1)?this.on:this.off;
             }
         });
 
@@ -1332,7 +1319,7 @@ DDJXP2.DeckControls4Deck = class extends components.Deck {
                 }
             },
             outValueScale: function(value) {
-                return (value > 0)?this.on:this.off;
+                return (value > 0.1)?this.on:this.off;
             }
         });
 
