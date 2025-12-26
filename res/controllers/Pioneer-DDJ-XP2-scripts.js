@@ -877,8 +877,8 @@ DDJXP2.PadModeContainers = {
         resetKey(status, control, value) {
             if (value) {
                 this.active = 0;
-                this.updateLEDs();
                 engine.setValue(this.group, "reset_key", 0x7F);
+                this.updateLEDs();
             }
         }
         syncKey(status, control, value) {
