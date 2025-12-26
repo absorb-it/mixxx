@@ -736,13 +736,13 @@ DDJXP2.PadModeContainers = {
 
             super.constructPads(i => {
                 if (i < 12) {
-                    const loopSize = Math.pow(2, theContainer.currentBaseJumpSize + i);
+                    const jumpSize = Math.pow(2, theContainer.currentBaseJumpSize + i);
                     return new components.Button({
                         midi: [0x97 + (deckOffset * 2), padNr * 0x10 + DDJXP2.padMidiAssignment[i]],
                         group,
                         on: DDJXP2.RGBPioneerCode(128, 0, 160),
                         off: DDJXP2.RGBPioneerCode(128, 0, 160, true),
-                        key: `beatjump_${loopSize}_${  (i % 2)?"forward":"backward"}`,
+                        key: `beatjump_${jumpSize}_${  (i % 2)?"forward":"backward"}`,
                     });
                 } else {
                     return DDJXP2.PadRows.sampler(deckOffset, group, i, padNr * 0x10);
