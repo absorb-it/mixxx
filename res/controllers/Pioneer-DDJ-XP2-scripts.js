@@ -641,11 +641,19 @@ DDJXP2.PadModeContainers = {
 
             this.parameterLeft = new components.Button({
                 group: group,
-                key: "loop_halve",
+                input(_channel, _control, value, _status, _group) {
+                    if (engine.getValue(this.group, "loop_enabled")) {
+                        engine.setValue(this.group, "beatjump_1_backward", value);
+                    }
+                }
             });
             this.parameterRight = new components.Button({
                 group: group,
-                key: "loop_double",
+                input(_channel, _control, value, _status, _group) {
+                    if (engine.getValue(this.group, "loop_enabled")) {
+                        engine.setValue(this.group, "beatjump_1_forward", value);
+                    }
+                }
             });
 
             super.constructPads(i => {
