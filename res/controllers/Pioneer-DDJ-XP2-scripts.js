@@ -833,6 +833,40 @@ DDJXP2.PadModeContainers = {
                 }
             });
         }
+        pitchDown(status, control, value) {
+            if (value && this.active !== -6) {
+                this.active -= 1;
+                if (!this.active) {
+                    this.active = -1;
+                }
+                engine.setValue(this.group, "pitch_down", 0x7F);
+                this.updateLEDs();
+            }
+        }
+        pitchUp(status, control, value) {
+            if (value && this.active !== 6) {
+                this.active += 1;
+                if (!this.active) {
+                    this.active = +1;
+                }
+                engine.setValue(this.group, "pitch_up", 0x7F);
+                this.updateLEDs();
+            }
+        }
+        resetKey(status, control, value) {
+            if (value) {
+                this.active = 0;
+                this.updateLEDs();
+                engine.setValue(this.group, "reset_key", 0x7F);
+            }
+        }
+        syncKey(status, control, value) {
+            if (value) {
+                engine.setValue(this.group, "sync_key", 0x7F);
+                this.active = engine.getValue(this.group, "pitch");
+                this.updateLEDs();
+            }
+        }
         init(status, control, value) {
             switch (value) {
             case 0:
@@ -908,6 +942,40 @@ DDJXP2.PadModeContainers = {
                     return DDJXP2.PadRows.sampler(deckOffset, group, i, padNr * 0x10);
                 }
             });
+        }
+        pitchDown(status, control, value) {
+            if (value && this.active !== -6) {
+                this.active -= 1;
+                if (!this.active) {
+                    this.active = -1;
+                }
+                engine.setValue(this.group, "pitch_down", 0x7F);
+                this.updateLEDs();
+            }
+        }
+        pitchUp(status, control, value) {
+            if (value && this.active !== 6) {
+                this.active += 1;
+                if (!this.active) {
+                    this.active = +1;
+                }
+                engine.setValue(this.group, "pitch_up", 0x7F);
+                this.updateLEDs();
+            }
+        }
+        resetKey(status, control, value) {
+            if (value) {
+                this.active = 0;
+                this.updateLEDs();
+                engine.setValue(this.group, "reset_key", 0x7F);
+            }
+        }
+        syncKey(status, control, value) {
+            if (value) {
+                engine.setValue(this.group, "sync_key", 0x7F);
+                this.active = Math.floor(engine.getValue(this.group, "pitch") + 0.5);
+                this.updateLEDs();
+            }
         }
         init(status, control, value) {
             switch (value) {
@@ -1194,6 +1262,17 @@ DDJXP2.DeckControls4Deck = class extends components.Deck {
                 this.type = components.Button.prototype.types.toggle;
                 this.inKey = "sync_key";
             },
+            input: function(channel, control, value, status, group) {
+                const target = theDeck.padMode.getPadModeInstance();
+                // check if current Pad Selection supports key modifications, in this case forward to Pads
+                if (this.inKey === "pitch_down" && target && target.pitchDown && typeof target.pitchDown === "function") {
+                    target.pitchDown(status, control, value);
+                } else if (this.inKey === "sync_key" && target && target.syncKey && typeof target.syncKey === "function") {
+                    target.syncKey(status, control, value);
+                } else {
+                    components.Button.prototype.input.call(this, channel, control, value, status, group);
+                }
+            },
             outValueScale: function(value) {
                 return (value < 0)?this.on:this.off;
             }
@@ -1209,6 +1288,17 @@ DDJXP2.DeckControls4Deck = class extends components.Deck {
             },
             shift: function() {
                 this.inKey = "reset_key";
+            },
+            input: function(channel, control, value, status, group) {
+                const target = theDeck.padMode.getPadModeInstance();
+                // check if current Pad Selection supports key modifications, in this case forward to Pads
+                if (this.inKey === "pitch_up" && target && target.pitchUp && typeof target.pitchUp === "function") {
+                    target.pitchUp(status, control, value);
+                } else if (this.inKey === "reset_key" && target && target.resetKey && typeof target.resetKey === "function") {
+                    target.resetKey(status, control, value);
+                } else {
+                    components.Button.prototype.input.call(this, channel, control, value, status, group);
+                }
             },
             outValueScale: function(value) {
                 return (value > 0)?this.on:this.off;
