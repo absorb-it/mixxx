@@ -763,6 +763,34 @@ DDJXP2.PadModeContainers = {
         constructor(padNr, deckOffset, group, _modeBtnColor, _modeBtnAttnColor) {
             super();
             const theContainer = this;
+            this.active = 0;
+            this.group = group;
+            this.parameterLeft = new components.Button({
+                group: group,
+                input(_channel, _control, value, _status, _group) {
+                    if (value) {
+                        theContainer.active -= 0.1;
+                        if (theContainer.active < -6) {
+                            theContainer.active = -6;
+                        }
+                        engine.setValue(this.group, "pitch_adjust", theContainer.active);
+                        theContainer.updateLEDs();
+                    }
+                },
+            });
+            this.parameterRight = new components.Button({
+                group: group,
+                input(_channel, _control, value, _status, _group) {
+                    if (value) {
+                        theContainer.active += 0.1;
+                        if (theContainer.active > 6) {
+                            theContainer.active = 6;
+                        }
+                        engine.setValue(this.group, "pitch_adjust", theContainer.active);
+                        theContainer.updateLEDs();
+                    }
+                },
+            });
 
             super.constructPads(i => {
                 if (i < 12) {
@@ -785,8 +813,10 @@ DDJXP2.PadModeContainers = {
                                 const newOffset = this.offset;
                                 if (engine.getValue(group, "pitch_adjust") === newOffset) {
                                     engine.setValue(group, "reset_key", 0x7F);
+                                    theContainer.active = 0;
                                 } else {
                                     engine.setValue(group, "pitch_adjust", newOffset);
+                                    theContainer.active = newOffset;
                                 }
                             }
                             theContainer.updateLEDs();
@@ -795,7 +825,7 @@ DDJXP2.PadModeContainers = {
                             this.output(engine.getValue(this.group, "pitch_adjust"));
                         },
                         outValueScale(value) {
-                            return (value === this.offset)?this.on:this.off;
+                            return (Math.abs(value -this.offset) < 0.1)?this.on:this.off;
                         },
                     });
                 } else {
