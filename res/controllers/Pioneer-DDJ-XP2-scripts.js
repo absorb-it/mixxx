@@ -855,6 +855,8 @@ DDJXP2.PadModeContainers = {
         constructor(padNr, deckOffset, group, _modeBtnColor, _modeBtnAttnColor) {
             super();
             const theContainer = this;
+            this.active = 0;
+            this.group = group;
             super.constructPads(i => {
                 if (i < 12) {
                     // offset from -6 to 6 without 0
@@ -875,12 +877,11 @@ DDJXP2.PadModeContainers = {
                         group,
                         on: DDJXP2.RGBPioneerCode(colorR, 0, colorB),
                         off: DDJXP2.RGBPioneerCode(colorR, 0, colorB, true),
-                        active: false,
                         input(channel, control, value, status, group) {
                             if (value) {
                                 engine.setValue(group, "reset_key", 0x7F);
-                                this.active = !this.active;
-                                if (this.active) {
+                                if (theContainer.active !== this.offset) {
+                                    theContainer.active = this.offset;
                                     let newOffset = this.offset;
                                     if (newOffset < 0) {
                                         while (newOffset++ < 0) {
@@ -891,17 +892,16 @@ DDJXP2.PadModeContainers = {
                                             engine.setValue(group, "pitch_up", 0x7F);
                                         }
                                     }
-                                    theContainer.deactivatePads();
-                                    this.active = true;
+                                } else {
+                                    theContainer.active = 0;
                                 }
                             }
-                            theContainer.updateLEDs();
                         },
                         updateLED() {
-                            this.output(this.active);
+                            this.output(theContainer.active === this.offset);
                         },
                         outValueScale(value) {
-                            return value?this.on:this.off;
+                            return (theContainer.active === this.offset)?this.on:this.off;
                         },
                     });
                 } else {
@@ -918,11 +918,6 @@ DDJXP2.PadModeContainers = {
                 this.updateLEDs();
                 break;
             }
-        }
-        deactivatePads() {
-            this.forEachComponent(function(component) {
-                component.active = false;
-            });
         }
         updateLEDs() {
             this.forEachComponent(function(component) {
