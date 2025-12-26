@@ -29,14 +29,14 @@
       type="enum"
       label="PAD Mode 2 configuration">
       <value label="HotCue">hotCue</value>
-      <value label="Beat Jump" default="true">beatJump</value>
+      <value label="Beat Jump">beatJump</value>
       <value label="Beat Loop">beatLoop</value>
       <value label="Sampler">sampler</value>
       <value label="Slicer">slicer</value>
       <value label="Slicer Roll">slicerRoll</value>
       <value label="Key Shift">keyShift</value>
       <value label="Key Pad">keyPad</value>
-      <value label="Quick Effects">quickEffect</value>
+      <value label="Quick Effects" default="true">quickEffect</value>
       <value label="Equalizer Effects">equalizerRack</value>
       <description>Select which options are available on PAD Mode 2.</description>
     </option>
@@ -45,8 +45,8 @@
       type="enum"
       label="PAD Mode 3 configuration">
       <value label="HotCue">hotCue</value>
-      <value label="Beat Jump">beatJump</value>
-      <value label="Beat Loop" default="true">beatLoop</value>
+      <value label="Beat Jump" default="true">beatJump</value>
+      <value label="Beat Loop">beatLoop</value>
       <value label="Sampler">sampler</value>
       <value label="Slicer">slicer</value>
       <value label="Slicer Roll">slicerRoll</value>
@@ -80,10 +80,10 @@
       <value label="Beat Jump">beatJump</value>
       <value label="Beat Loop">beatLoop</value>
       <value label="Sampler">sampler</value>
-      <value label="Slicer" default="true">slicer</value>
+      <value label="Slicer">slicer</value>
       <value label="Slicer Roll">slicerRoll</value>
       <value label="Key Shift">keyShift</value>
-      <value label="Key Pad">keyPad</value>
+      <value label="Key Pad" default="true">keyPad</value>
       <value label="Quick Effects">quickEffect</value>
       <value label="Equalizer Effects">equalizerRack</value>
       <description>Select which options are available on PAD Mode 5.</description>
@@ -97,11 +97,11 @@
       <value label="Beat Loop">beatLoop</value>
       <value label="Sampler">sampler</value>
       <value label="Slicer">slicer</value>
-      <value label="Slicer Roll" default="true">slicerRoll</value>
+      <value label="Slicer Roll">slicerRoll</value>
       <value label="Key Shift">keyShift</value>
       <value label="Key Pad">keyPad</value>
       <value label="Quick Effects">quickEffect</value>
-      <value label="Equalizer Effects">equalizerRack</value>
+      <value label="Equalizer Effects" default="true">equalizerRack</value>
       <description>Select which options are available on PAD Mode 6.</description>
     </option>
     <option
@@ -110,11 +110,11 @@
       label="PAD Mode 7 configuration">
       <value label="HotCue">hotCue</value>
       <value label="Beat Jump">beatJump</value>
-      <value label="Beat Loop">beatLoop</value>
+      <value label="Beat Loop" default="true">beatLoop</value>
       <value label="Sampler">sampler</value>
       <value label="Slicer">slicer</value>
       <value label="Slicer Roll">slicerRoll</value>
-      <value label="Key Shift" default="true">keyShift</value>
+      <value label="Key Shift">keyShift</value>
       <value label="Key Pad">keyPad</value>
       <value label="Quick Effects">quickEffect</value>
       <value label="Equalizer Effects">equalizerRack</value>
@@ -130,8 +130,8 @@
       <value label="Sampler">sampler</value>
       <value label="Slicer">slicer</value>
       <value label="Slicer Roll">slicerRoll</value>
-      <value label="Key Shift">keyShift</value>
-      <value label="Key Pad" default="true">keyPad</value>
+      <value label="Key Shift" default="true">keyShift</value>
+      <value label="Key Pad">keyPad</value>
       <value label="Quick Effects">quickEffect</value>
       <value label="Equalizer Effects">equalizerRack</value>
       <description>Select which options are available on PAD Mode 8.</description>
@@ -204,7 +204,7 @@
     <option variable="useFaderForQuickEffects"
       type="boolean"
       label="Use Fader for Quick Effect Super Metaknob if Effect on Pad is active and no FX-Button is active,"
-      default="false">
+      default="true">
       <description>
          When selected, the Faders can be used to control the Super Metaknob of the active Deck for the Pad- selected Quickeffect as long as no FX-Button is active. If disabled, there will be no action at all if no FX-Button is active.
       </description>
