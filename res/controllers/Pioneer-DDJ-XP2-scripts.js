@@ -372,13 +372,6 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
             this.activate(1, 0);
         }
     }
-    // external toggle for slip mode
-    slip(status, control, value) {
-        if (value && !engine.getValue(this.group, "loop_enabled")) {
-            this.useSlip = !this.useSlip;
-            midi.sendShortMsg(this.midi[0], this.midi[1], (this.useSlip !== engine.getSetting("useSlipOnSlicer"))?this.slipOn:this.slipOff);
-        }
-    }
     // external initialization, will be called on every pad selection button press
     init(status, control, value) {
         switch (value) {
@@ -390,8 +383,10 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
         case 2:
             this.isActivePadMode = true;
             this.activate(1, 1);
-            this.midi = [status, control];
-            midi.sendShortMsg(this.midi[0], this.midi[1], (this.useSlip !== engine.getSetting("useSlipOnSlicer"))?this.slipOn:this.slipOff);
+            if (this.padModeButton) {
+                this.padModeButton.midi = [status, control];
+                this.padModeButton.output();
+            }
             break;
         }
     }
@@ -656,6 +651,15 @@ DDJXP2.PadModeContainers = {
                     }
                 }
             });
+            // indicate slip Mode with different padMode Button color
+            this.padModeButton = new components.Button({
+                on: theContainer.slipOn,
+                off: theContainer.slipOff,
+                sendShifted: false,
+                outValueScale: function(_value) {
+                    return (theContainer.useSlip !== engine.getSetting("useSlipOnLoops"))?this.on:this.off;
+                }
+            });
 
             super.constructPads(i => {
                 if (i < 12) {
@@ -689,7 +693,7 @@ DDJXP2.PadModeContainers = {
         slip(status, control, value) {
             if (value && !engine.getValue(this.group, "loop_enabled")) {
                 this.useSlip = !this.useSlip;
-                midi.sendShortMsg(this.midi[0], this.midi[1], (this.useSlip !== engine.getSetting("useSlipOnLoops"))?this.slipOn:this.slipOff);
+                this.padModeButton.output();
             }
         }
         init(status, control, value) {
@@ -698,8 +702,8 @@ DDJXP2.PadModeContainers = {
                 break;
             case 1:
             case 2:
-                this.midi = [status, control];
-                midi.sendShortMsg(this.midi[0], this.midi[1], (this.useSlip !== engine.getSetting("useSlipOnLoops"))?this.slipOn:this.slipOff);
+                this.padModeButton.midi = [status, control];
+                this.padModeButton.output();
                 break;
             }
         }
@@ -712,6 +716,15 @@ DDJXP2.PadModeContainers = {
             this.slipOff = modeBtnColor;
 
             const padContainer = this;
+            // indicate slip Mode with different padMode Button color
+            this.padModeButton = new components.Button({
+                on: padContainer.slipOn,
+                off: padContainer.slipOff,
+                sendShifted: false,
+                outValueScale: function(_value) {
+                    return (padContainer.useSlip !== engine.getSetting("useSlipOnSlicer"))?this.on:this.off;
+                }
+            });
             super.constructPads((i) => {
                 if (i < 8) {
                     // Slicer copied and adapted from Hercules-DJControl-Inpulse-300-script.js
@@ -728,6 +741,13 @@ DDJXP2.PadModeContainers = {
                     return DDJXP2.PadRows.sampler(deckOffset, group, i, padNr * 0x10);
                 }
             });
+        }
+        // external toggle for slip mode
+        slip(status, control, value) {
+            if (value && !engine.getValue(this.group, "loop_enabled")) {
+                this.useSlip = !this.useSlip;
+                this.padModeButton.output();
+            }
         }
     },
     beatJump: class extends DDJXP2.PadMode {
