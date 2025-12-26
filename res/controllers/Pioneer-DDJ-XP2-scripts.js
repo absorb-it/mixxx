@@ -277,8 +277,9 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
         this.isActivePadMode = false;
         this.samplesBetweenSlices = undefined;
         const SlicerContainer = this;
+
         // move slicer window one samplesBetweenSlices-Size left
-        this.parameterLeft = {
+        this.parameterLeft = new components.Button({
             input(_channel, _control, value, _status, _group) {
                 if (value) {
                     SlicerContainer.startPos -= SlicerContainer.samplesBetweenSlices;
@@ -286,9 +287,9 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
                     SlicerContainer.updateLoop();
                 }
             }
-        };
+        });
         // move slicer window one samplesBetweenSlices-Size right
-        this.parameterRight = {
+        this.parameterRight = new components.Button({
             input(_channel, _control, value, _status, _group) {
                 if (value) {
                     SlicerContainer.startPos += SlicerContainer.samplesBetweenSlices;
@@ -296,7 +297,8 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
                     SlicerContainer.updateLoop();
                 }
             }
-        };
+        });
+
         // always update the slicer if a new track is loaded
         this.loadConnection = engine.makeConnection(this.group, "track_loaded", this.trackLoaded.bind(this));
     }
