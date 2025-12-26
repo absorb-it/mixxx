@@ -6,6 +6,8 @@ Reloop Mixtour controller script
 components.Component.prototype.shiftOffset = 0x3F;
 components.Component.prototype.shiftControl = true;
 components.Component.prototype.sendShifted = true;
+// the color for most buttons is green, just change for hotcue buttons directly
+components.Button.prototype.on = 0x01;
 // override Component prototype to prevent double connections
 // original connect function will override connections[0] and
 // this way looses control of existing connection
@@ -195,6 +197,7 @@ ReloopMixtour.Deck = class extends components.Deck {
             this[`hotcue${i}`] = new components.HotcueButton({
                 midi: [0x90 + midiChannel, 0x0C + i],
                 number: i,
+                on: 0x2B,
             });
         };
 
