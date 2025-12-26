@@ -201,8 +201,6 @@ ReloopMixtour.Deck = class extends components.Deck {
         this.forEachComponent(function(component) {
             if (component.group === undefined) {
                 component.group = this.currentDeck;
-                component.connect();
-                component.trigger();
             };
         });
     }
@@ -300,8 +298,6 @@ ReloopMixtour.Mixer = class extends components.Deck {
         this.forEachComponent(function(component) {
             if (component.group === undefined) {
                 component.group = this.currentDeck;
-                component.connect();
-                component.trigger();
             };
         });
     }
