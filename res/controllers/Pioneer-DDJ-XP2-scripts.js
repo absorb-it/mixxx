@@ -1171,6 +1171,33 @@ DDJXP2.DeckControls4Deck = class extends components.Deck {
         this.loadTrack = new components.Button({
             type: components.Button.prototype.types.push,
             key: "LoadSelectedTrack",
+            clickTime: 0,
+            timer: undefined,
+            input: function(channel, control, value, status, group) {
+                if (this.inKey === "LoadSelectedTrack" && value) {
+                    if ((Date.now() - this.clickTime) < 500) { // double-click
+                        this.clickTime = 0;
+                        engine.stopTimer(this.timer);
+                        engine.setValue(theDeck.currentDeck, "CloneFromDeck", ((script.deckFromGroup(theDeck.currentDeck) + 2) % 4 + 1));
+                    } else {
+                        this.clickTime = Date.now();
+                        // start timer to activate function if no double-click is detected
+                        this.timer = engine.beginTimer(510, function() {
+                            components.Button.prototype.input.call(theDeck.loadTrack, channel, control, value, status, group);
+                        }, true);
+                    }
+                } else {
+                    components.Button.prototype.input.call(theDeck.loadTrack, channel, control, value, status, group);
+                }
+            },
+            unshift: function() {
+                this.inKey = "LoadSelectedTrack";
+                this.group = theDeck.currentDeck;
+            },
+            shift: function() {
+                this.inKey = "LoadSelectedTrackAndPlay";
+                this.group = "[PreviewDeck1]";
+            },
         });
 
         this.playButton = new components.PlayButton({
