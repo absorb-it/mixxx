@@ -406,7 +406,7 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
             this.bpmConnection.disconnect();
             this.bpmConnection = undefined;
         }
-        // no wait for the upcoming bpm detection, can't do anything without this info
+        // wait for the upcoming bpm detection, can't do anything without this info
         if (engine.getValue(this.group, "track_loaded") && this.isActivePadMode) {
             this.bpmConnection = engine.makeConnection(this.group, "local_bpm", this.trackLoadedAndBPMDetected.bind(this));
         }
