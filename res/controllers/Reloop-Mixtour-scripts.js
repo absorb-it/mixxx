@@ -281,12 +281,14 @@ ReloopMixtour.Mixer = class extends components.Deck {
         this.pflMeter = new components.Component({
             midi: [0x90 + midiChannel, 0x11],
             key: "vu_meter",
+            max: 0x68
         });
 
         this.masterMeter = new components.Component({
             midi: [0x90 + midiChannel, 0x12],
             key: (this.currentDeck === "[Channel1]")?"vu_meter_left":"vu_meter_right",
             group: "[Main]",
+            max: 0x68
         });
 
         this.fxIndicator = new components.Component({
