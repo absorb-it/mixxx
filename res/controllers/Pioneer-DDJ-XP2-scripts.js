@@ -1272,7 +1272,9 @@ DDJXP2.DeckControls4Deck = class extends components.Deck {
 
         this.keyMinus = new components.Button({
             midi: [0x90 + midiChannel, 0x0A],
-            sendShifted: false,
+            shiftChannel: false,
+            shiftControl: true,
+            shiftOffset: 0x5B,
             type: components.Button.prototype.types.push,
             key: "pitch",
             unshift: function() {
@@ -1301,7 +1303,9 @@ DDJXP2.DeckControls4Deck = class extends components.Deck {
 
         this.keyPlus = new components.Button({
             midi: [0x90 + midiChannel, 0x79],
-            sendShifted: false,
+            shiftChannel: false,
+            shiftControl: true,
+            shiftOffset: 0xEB,
             type: components.Button.prototype.types.push,
             key: "pitch",
             unshift: function() {
