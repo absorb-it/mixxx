@@ -373,7 +373,7 @@ DDJXP2.PadModeSlicer = class extends DDJXP2.PadMode {
     }
     // external toggle for slip mode
     slip(status, control, value) {
-        if (value) {
+        if (value && !engine.getValue(this.group, "loop_enabled")) {
             this.useSlip = !this.useSlip;
             midi.sendShortMsg(this.midi[0], this.midi[1], (this.useSlip !== engine.getSetting("useSlipOnSlicer"))?this.slipOn:this.slipOff);
         }
@@ -637,6 +637,7 @@ DDJXP2.PadModeContainers = {
             this.useSlip = engine.getSetting("useSlipOnLoops");
             this.slipOn = modeBtnAttnColor;
             this.slipOff = modeBtnColor;
+            this.group = group;
 
             this.parameterLeft = new components.Button({
                 group: group,
