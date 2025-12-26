@@ -790,26 +790,28 @@ DDJXP2.PadModeContainers = {
             this.group = group;
             this.parameterLeft = new components.Button({
                 group: group,
+                key: "pitch_adjust",
                 input(_channel, _control, value, _status, _group) {
                     if (value) {
                         theContainer.active -= 0.1;
                         if (theContainer.active < -6) {
                             theContainer.active = -6;
                         }
-                        engine.setValue(this.group, "pitch_adjust", theContainer.active);
+                        this.inSetValue(theContainer.active);
                         theContainer.updateLEDs();
                     }
                 },
             });
             this.parameterRight = new components.Button({
                 group: group,
+                key: "pitch_adjust",
                 input(_channel, _control, value, _status, _group) {
                     if (value) {
                         theContainer.active += 0.1;
                         if (theContainer.active > 6) {
                             theContainer.active = 6;
                         }
-                        engine.setValue(this.group, "pitch_adjust", theContainer.active);
+                        this.inSetValue(theContainer.active);
                         theContainer.updateLEDs();
                     }
                 },
@@ -826,29 +828,25 @@ DDJXP2.PadModeContainers = {
                     return new components.Button({
                         midi: [0x97 + (deckOffset * 2), padNr * 0x10 + DDJXP2.padMidiAssignment[i]],
                         number: i,
-                        key: "pitch_adjust",
+                        inKey: "pitch_adjust",
+                        outKey: "pitch",
                         offset,
                         group,
                         on: DDJXP2.RGBPioneerCode(255 + (offset - 6) * 20, 0, 255 - (offset + 6) * 20),
                         off: DDJXP2.RGBPioneerCode(255 + (offset - 6) * 20, 0, 255 - (offset + 6) * 20, true),
                         input(channel, control, value, status, group) {
                             if (value) {
-                                const newOffset = this.offset;
-                                if (engine.getValue(group, "pitch_adjust") === newOffset) {
-                                    engine.setValue(group, "reset_key", 0x7F);
-                                    theContainer.active = 0;
-                                } else {
-                                    engine.setValue(group, "pitch_adjust", newOffset);
-                                    theContainer.active = newOffset;
-                                }
+                                theContainer.active = (Math.abs(this.inGetValue() - this.offset) < 0.2)?0:this.offset;
+                                this.inSetValue(theContainer.active);
+                                theContainer.updateLEDs();
                             }
-                            theContainer.updateLEDs();
                         },
                         updateLED() {
-                            this.output(engine.getValue(this.group, "pitch_adjust"));
+                            this.output(this.inGetValue());
                         },
                         outValueScale(value) {
-                            return (Math.abs(value -this.offset) < 0.1)?this.on:this.off;
+                            // distance between pads is 1.1 - light neighbour if no direct match
+                            return (value && Math.abs(value - this.offset) <= 1)?this.on:this.off;
                         },
                     });
                 } else {
